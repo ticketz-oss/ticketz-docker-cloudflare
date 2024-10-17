@@ -55,7 +55,7 @@ docker compose up -d
 
 Em alguns minutos o sistema estará no ar no endereço configurado.
 
-O login padrão é `admin@ticket.host` e a senha é `123456`
+O login padrão é `admin@ticketz.host` e a senha é `123456`
 
 Desligando o Serviço
 --------------------
