@@ -1,0 +1,88 @@
+networks:
+  ticketz:
+  nginx-proxy:
+
+volumes:
+  redis_data:
+  postgres_data:
+  backend_public:
+  backend_private:
+    
+services:
+  backend:
+    image: ghcr.io/ticketz-oss/ticketz-backend:latest
+    volumes:
+      - backend_public:/usr/src/app/public
+      - backend_private:/usr/src/app/private
+    env_file:
+      - .env-backend
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - ticketz
+
+  frontend:
+    image: ghcr.io/ticketz-oss/ticketz-frontend:latest
+    volumes:
+      - backend_public:/var/www/backend-public
+    env_file:
+      - .env-frontend
+    ports:
+      - ${FRONTEND_PORT:-3000}:80
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - ticketz
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-ticketz}
+      - POSTGRES_DB=${POSTGRES_DB:-ticketz}
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - TZ=${TZ:-America/Sao_Paulo}
+    expose:
+      - 5432
+    restart: always
+    networks:
+      - ticketz
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    expose:
+      - 6379
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - ticketz
+
+  watchtower:
+    image: containrrr/watchtower
+    profiles: ["do-not-start"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 1800 --cleanup
+    restart: unless-stopped
+
+  sidekick:
+    image: ghcr.io/ticketz-oss/ticketz-sidekick:latest
+    profiles: ["do-not-start"]
+    env_file:
+      - .env-backend
+    restart: unless-stopped
+    volumes:
+      - backend_public:/backend-public
+      - backend_private:/backend-private
+      - ./backups:/backups
+      - ./retrieve:/retrieve
+    depends_on:
+      - postgres
+    networks:
+      - ticketz

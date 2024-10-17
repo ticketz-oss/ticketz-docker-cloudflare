@@ -1,0 +1,4 @@
+.env-backend
+.env-frontend
+*~
+/.project
