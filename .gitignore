@@ -1,3 +1,4 @@
+.env-cloudflared
 .env-backend
 .env-frontend
 *~
