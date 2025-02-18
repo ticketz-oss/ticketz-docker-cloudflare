@@ -1,16 +1,11 @@
-Instalação local do Ticketz
-===========================
+Ticketz usando túnel Zero Trust da Cloudflare
+=============================================
 
 O Ticketz é basicamente composto por dois containers, eles podem ser instalados de diversas formas.
 
-**A instalação seguindo este guia não instala o código fonte. Ela instala as imagens que foram compiladas pelo serviço Github Actions**, caso deseje fazer alterações no código é necessário seguir o guia de instalação a partir do fonte, conforme instruções no [Projeto Ticketz](https://github.com/ticketz-oss/ticketz).
-
-Este repositório contém um exemplo para instalação local, utilizando
-o protocolo http (sem criptografia), para ser utilizado no localhost ou até mesmo em uma rede local.
-
-> ##### ATENÇÃO
-> 
-> A utilização em rede local sem criptografia pode expôr senhas e também a comunicação entre os usuários
+Este repositório contém um exemplo para instalação utilizando o serviço de
+túnel "zero trust" da Cloudflare. Pode ser instalado em qualquer sistema
+que suporte Docker
 
 Preparação do ambiente
 ----------------------
@@ -33,7 +28,55 @@ curl -sSL https://get.docker.com | sh
 
 ### Download do projeto
 
-O conteúdo deste repositório pode ser colocado em uma pasta, preferencialmente com o nome de `ticketz-docker-local`
+O conteúdo deste repositório pode ser colocado em uma pasta, preferencialmente com o nome de `ticketz-docker-cloudflare`
+
+Se preferir pode baixar utilizando o git:
+
+```
+git clone https://github.com/ticketz-oss/ticketz-docker-cloudflare
+```
+
+Configuração da Cloudflare
+--------------------------
+
+### Pré requisito
+
+Ter um domínio hospedado na Cloudflare - essa parte fica fora do escopo desse guia
+
+### Criação do túnel
+
+No painel inicial da Cloudflare, entrar em "Zero Trust" no menu da esquerda.
+
+Selecionar a opção "Redes -> Túneis"
+
+Clicar em "+ Criar um Túnel"
+
+Selecionar o tipo "Cloudflared", nomear o túnel e salvar
+
+O Túnel já estará criado, na tela seguinte será exibida uma lista de sistemas nos quais o túnel pode ser instalado... Clicar na opção "Docker"
+
+Logo abaixo haverá um comando longo que deve ser copiado. Desse comando precisamos só a parte que vem após o "--token", será uma string longa de caracteres aleatórios. Ela deve ser salva para a configuração do sistema posteriormente.
+
+### Criação do hostname
+
+Voltando para a tela Redes -> Túneis, clicar sobre o nome do túnel recém criado e após isso em Editar.
+
+Selecionar a aba "Nome do host público"
+
+Clicar em "+ Adicionar um nome do host público"
+
+Selecionar um nome de subdomínoi e o domínio para a sua aplicação.
+
+O campo "caminho" fica vazio
+
+O campo "serviço" seleciona "HTTP"
+
+No campo "URL" preencher apenas com "frontend" 
+
+Salvar as alterações
+
+Está concluída a configuração na cloudflare.
+
 
 Configuração
 ------------
@@ -42,12 +85,18 @@ Todos os comandos a seguir devem ser digitados estando dentro da pasta deste pro
 
 Os arquivos `example.env-backend` e `example.env-frontend` devem ser copiados para `.env-backend` e `.env-frontend` respectivamente.
 
-Para utilizar acessando como localhost isso é tudo o que precisa. Caso queira utilizar em rede local através de um IP interno (por ex. `192.168.0.10`) é necessário editar ambos os arquivos substituindo `localhost` pelo endereço desejado. Também é possível alterar a porta.
+Nos arquivos `.env-backend` e `.env-frontend` é absolutamente necessário editar o nome do host para refletir o nome que deseja utilizar.
+
+Criar um arquivo chamado `.env-cloudflared`, nesse arquivo preencher apenas uma linha com o token obtido da cloudflare, no seguinte formato:
+
+```
+TUNNEL_TOKEN=conteúdo do token
+```
 
 Execução
 --------
 
-Depois de copiados e configurados os arquivos `.env-backend` e `.env-frontend` basta executar o comando:
+Depois de copiados e configurados os arquivos `.env-backend`, `.env-frontend` e `.env-cloudflared` basta executar o comando:
 
 ```bash
 docker compose up -d
@@ -55,7 +104,7 @@ docker compose up -d
 
 Em alguns minutos o sistema estará no ar no endereço configurado.
 
-O login padrão é `admin@ticketz.host` e a senha é `123456`
+O login é o email configurado no arquivo `.env-backend`, o padrão é `admin@ticketz.host` e a senha é `123456`
 
 Desligando o Serviço
 --------------------

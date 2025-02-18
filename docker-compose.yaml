@@ -29,8 +29,6 @@ services:
       - backend_public:/var/www/backend-public
     env_file:
       - .env-frontend
-    ports:
-      - ${FRONTEND_PORT:-3000}:80
     restart: always
     depends_on:
       - backend
@@ -84,5 +82,14 @@ services:
       - ./retrieve:/retrieve
     depends_on:
       - postgres
+    networks:
+      - ticketz
+
+  cloudflared:
+    image: cloudflare/cloudflared
+    restart: always
+    command: tunnel run
+    env_file:
+      - .env-cloudflared
     networks:
       - ticketz
