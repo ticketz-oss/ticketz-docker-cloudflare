@@ -139,5 +139,5 @@ docker compose up -d
 Para ativar essa funcionalidade basta acessar o Terminal do Linux ou Windows Powershell, posicionar-se na pasta do projeto e digitar o seguinte comando:
 
 ```bash
-docker compose up watchtower
+docker compose up watchtower -d
 ```
